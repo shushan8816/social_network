@@ -28,12 +28,8 @@ export class UserController {
     description: 'The user has been successfully created.',
   })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
-  createUser(@Body() createUserDto: CreateUserDto): Promise<CreateUserDto> {
-    try {
-      return this.userService.create(createUserDto);
-    } catch (error) {
-      throw new HttpException(error, error.getStatus());
-    }
+  createUser(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
+    return this.userService.create(createUserDto);
   }
 
   @Put(':id')
@@ -47,11 +43,7 @@ export class UserController {
     @Param('id') userId: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserEntity> {
-    try {
-      return this.userService.update(updateUserDto, userId);
-    } catch (error) {
-      throw new HttpException(error, error.getStatus());
-    }
+    return this.userService.update(updateUserDto, userId);
   }
 
   @Get()
@@ -61,12 +53,8 @@ export class UserController {
     description: 'The users has been successfully get.',
   })
   @ApiResponse({ status: 404, description: 'Users not found' })
-  getUsers() {
-    try {
-      return this.userService.getAll();
-    } catch (error) {
-      throw new HttpException(error, error.getStatus());
-    }
+  getUsers(): Promise<UserEntity[]> {
+    return this.userService.getAll();
   }
 
   @Get(':userId')
@@ -77,11 +65,7 @@ export class UserController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   getUserById(@Param('userId') userId: string) {
-    try {
-      return this.userService.getById(userId);
-    } catch (error) {
-      throw new HttpException(error, error.getStatus());
-    }
+    return this.userService.getById(userId);
   }
 
   @Delete(':userId')
@@ -92,10 +76,6 @@ export class UserController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   deleteUser(@Param('userId') userId: string) {
-    try {
-      return this.userService.delete(userId);
-    } catch (error) {
-      throw new HttpException(error, error.getStatus());
-    }
+    return this.userService.delete(userId);
   }
 }

@@ -1,23 +1,26 @@
-import * as bcrypt from 'bcryptjs';
 import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  BeforeInsert,
-  BeforeUpdate,
   Unique,
+  OneToMany,
 } from 'typeorm';
-import { BaseEntity } from '../../enitites/base.entity';
+import { AbstractEntity } from '../../common/entity/abstract.entity';
+import { UserDto } from './dto/user.dto';
+import { PostEntity } from '../post/entities/post.entity';
 
 @Entity({ name: 'users' })
 @Unique(['email'])
-export class UserEntity extends BaseEntity {
+export class UserEntity extends AbstractEntity<UserDto> {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  userName: string;
+  @Column({ nullable: true })
+  firstName: string;
+
+  @Column({ nullable: true })
+  lastName: string;
 
   @Column({ unique: true })
   email: string;
@@ -26,21 +29,14 @@ export class UserEntity extends BaseEntity {
   @Exclude()
   password: string;
 
+  @Column({ nullable: true })
+  avatar?: string;
+
   constructor(data: Partial<UserEntity> = {}) {
     super();
     Object.assign(this, data);
   }
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  async hashPassword(): Promise<void> {
-    const salt = await bcrypt.genSalt();
-    if (!/^\$2a\$\d+\$/.test(this.password)) {
-      this.password = await bcrypt.hash(this.password, salt);
-    }
-  }
-
-  // async checkPassword(plainPassword: string): Promise<boolean> {
-  //   return await bcrypt.compare(plainPassword, this.password);
-  // }
+  @OneToMany(() => PostEntity, (postEntity) => postEntity.user)
+  posts: PostEntity[];
 }

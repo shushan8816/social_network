@@ -1,42 +1,94 @@
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { isNil } from '@nestjs/common/utils/shared.utils';
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { isNil } from 'lodash';
 
+import { UserSubscriber } from '../../subscribers/user.subscriber';
+
+@Injectable()
 export class ApiConfigService {
   constructor(private configService: ConfigService) {}
 
-  get nodeEnv(): string {
-    return this.getString('NODE_ENV', 'development');
-  }
   get isDevelopment(): boolean {
     return this.nodeEnv === 'development';
   }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
-  private getBoolean(key: string): boolean {
-    return this.configService.get(key) === 'true';
+
+  get isTest(): boolean {
+    return this.nodeEnv === 'test';
   }
+
   private getNumber(key: string): number {
-    return Number(this.configService.get(key));
-  }
-  private getString(key: string, defaultValue?: string): string {
-    const value = this.configService.get(key, defaultValue);
-    if (isNil(value)) {
-      throw new Error(`${key} environment variable doesn't exist`);
+    const value = this.get(key);
+
+    try {
+      return Number(value);
+    } catch {
+      throw new Error(key + ' environment variable is not a number');
     }
+  }
+
+  private getBoolean(key: string): boolean {
+    const value = this.get(key);
+
+    try {
+      return Boolean(JSON.parse(value));
+    } catch {
+      throw new Error(key + ' env var is not a boolean');
+    }
+  }
+
+  getString(key: string): string {
+    const value = this.get(key);
+
     return value.replace(/\\n/g, '\n');
   }
-  get typeOrmConfig(): TypeOrmModuleOptions {
-    const entities = [
+
+  get nodeEnv(): string {
+    return this.getString('NODE_ENV');
+  }
+
+  get postgresConfig(): TypeOrmModuleOptions {
+    let entities = [
       __dirname + '/../../modules/**/*.entity{.ts,.js}',
       __dirname + '/../../modules/**/*.view-entity{.ts,.js}',
     ];
-    const migrations = [__dirname + '/../../migrations/*{.ts,.js}'];
+    let migrations = [__dirname + '/../../database/migrations/*{.ts,.js}'];
+
+    if (module.hot) {
+      const entityContext = require.context(
+        './../../modules',
+        true,
+        /\.entity\.ts$/,
+      );
+      entities = entityContext.keys().map((id) => {
+        const entityModule = entityContext<Record<string, unknown>>(id);
+        const [entity] = Object.values(entityModule);
+
+        return entity as string;
+      });
+      const migrationContext = require.context(
+        './../../database/migrations',
+        false,
+        /\.ts$/,
+      );
+
+      migrations = migrationContext.keys().map((id) => {
+        const migrationModule = migrationContext<Record<string, unknown>>(id);
+        const [migration] = Object.values(migrationModule);
+
+        return migration as string;
+      });
+    }
+
     return {
       entities,
       migrations,
-      keepConnectionAlive: true,
+      keepConnectionAlive: !this.isTest,
+      dropSchema: this.isTest,
       type: 'postgres',
       name: 'default',
       host: this.getString('DB_HOST'),
@@ -44,8 +96,31 @@ export class ApiConfigService {
       username: this.getString('DB_USERNAME'),
       password: this.getString('DB_PASSWORD'),
       database: this.getString('DB_DATABASE'),
+      subscribers: [UserSubscriber],
       migrationsRun: true,
-      logging: this.isDevelopment,
     };
+  }
+
+  get authConfig() {
+    return {
+      privateKey: this.getString('JWT_PRIVATE_KEY'),
+      jwtExpirationTime: this.getNumber('JWT_EXPIRATION_TIME'),
+    };
+  }
+
+  get appConfig() {
+    return {
+      port: this.getString('PORT'),
+    };
+  }
+
+  private get(key: string): string {
+    const value = this.configService.get<string>(key);
+
+    if (isNil(value)) {
+      throw new Error(key + ' environment variable does not set'); // probably we should call process.exit() too to avoid locking the service
+    }
+
+    return value;
   }
 }

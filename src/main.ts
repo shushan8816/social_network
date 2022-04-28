@@ -2,12 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpStatus, ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ApiConfigService } from './shared/services/api-config.service';
+import { SharedModule } from './shared/shared.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
-  const port = config.get<number>('PORT');
+  const configService = app.select(SharedModule).get(ApiConfigService);
 
   const options = new DocumentBuilder()
     .setTitle('NestJS API example')
@@ -25,8 +25,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(port, () => {
-    console.log(`Server started on port = ${port}`);
-  });
+  const port = configService.appConfig.port;
+  await app.listen(port);
+
+  console.info(`server running on ${await app.getUrl()}`);
+
+  return app;
 }
 bootstrap();
