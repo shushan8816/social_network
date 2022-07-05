@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -13,7 +12,7 @@ import { PostEntity } from '../post/entities/post.entity';
 @Entity({ name: 'users' })
 @Unique(['email'])
 export class UserEntity extends AbstractEntity<UserDto> {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Column({ nullable: true })
@@ -26,8 +25,7 @@ export class UserEntity extends AbstractEntity<UserDto> {
   email: string;
 
   @Column()
-  @Exclude()
-  password: string;
+  password: string ;
 
   @Column({ nullable: true })
   avatar?: string;

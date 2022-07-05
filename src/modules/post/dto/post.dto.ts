@@ -1,18 +1,21 @@
-import { PostEntity } from '../entities/post.entity';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { AbstractDto } from '../../../common/dto/abstract.dto';
+import { IPostEntity } from '../entities/IPostEntity';
 
 export class PostDto extends AbstractDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: String })
   title: string;
 
-  @ApiPropertyOptional()
-  content?: string;
+  @ApiPropertyOptional({ type: String })
+  description: string;
 
-  @ApiPropertyOptional()
-  info: string;
-
-  constructor(postEntity: PostEntity) {
+  constructor(postEntity: IPostEntity) {
     super(postEntity);
+
+    if (!postEntity) {
+      return;
+    }
+    this.title = postEntity.title;
+    this.description = postEntity.description;
   }
 }

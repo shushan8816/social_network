@@ -1,11 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { ApiConfigService } from '../../shared/services/api-config.service';
-import { JwtStrategy } from './strategies/jwt-strategy';
+import { JWTAuthGuard } from '../../guards/jwt-auth.guard';
+import { LocalAuthGuard } from '../../guards/local-auth.guard';
 
 @Module({
   imports: [
@@ -16,21 +17,16 @@ import { JwtStrategy } from './strategies/jwt-strategy';
         privateKey: configService.authConfig.privateKey,
         signOptions: {
           algorithm: 'RS256',
-          //     expiresIn: configService.getNumber('JWT_EXPIRATION_TIME'),
         },
         verifyOptions: {
           algorithms: ['RS256'],
         },
-        // if you want to use token with expiration date
-        // signOptions: {
-        //     expiresIn: configService.getNumber('JWT_EXPIRATION_TIME'),
-        // },
       }),
       inject: [ApiConfigService],
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtModule, AuthService],
+  providers: [AuthService, JwtService, JWTAuthGuard, LocalAuthGuard],
+  exports: [AuthService],
 })
 export class AuthModule {}

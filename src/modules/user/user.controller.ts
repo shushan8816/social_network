@@ -22,7 +22,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @ApiOkResponse({
     status: 201,
     description: 'The user has been successfully created.',
@@ -64,7 +64,7 @@ export class UserController {
     description: 'The user has been successfully get.',
   })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
-  getUserById(@Param('userId') userId: string) {
+  getUserById(@Param('id') userId: string) {
     return this.userService.getById(userId);
   }
 

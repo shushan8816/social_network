@@ -1,18 +1,22 @@
-import { PostRepository } from './post.repository';
-import { CommandBus } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { Transactional } from 'typeorm-transactional-cls-hooked';
-import { Uuid } from 'aws-sdk/clients/wisdom';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostEntity } from './entities/post.entity';
-import { CreatePostCommand } from './cmd/create-post.cmd';
 import { PostNotFoundException } from '../../exceptions/post-not-found.exception';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostRepository } from './post.repository';
+import { CreatePostCommand } from './cmd/create-post.cmd';
+import { GetPostHandler } from './cmd/get-post.cmd';
+import { CommandBus } from '@nestjs/cqrs';
+import { Transactional } from 'typeorm-transactional-cls-hooked';
+import { Uuid } from 'aws-sdk/clients/wisdom';
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class PostService {
   constructor(
-    private postRepository: PostRepository,
+    @InjectRepository(PostEntity)
+    private readonly postRepository: Repository<PostEntity>,
     private commandBus: CommandBus,
   ) {}
 
@@ -32,7 +36,7 @@ export class PostService {
     return postEntities;
   }
 
-  async getSinglePost(id: Uuid): Promise<PostEntity> {
+  async getSinglePost(id: GetPostHandler): Promise<PostEntity> {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .where('post.id = :id', { id });
@@ -46,7 +50,7 @@ export class PostService {
     return postEntity;
   }
 
-  async updatePost(id: Uuid, updatePostDto: UpdatePostDto): Promise<void> {
+  async updatePost(id: string, updatePostDto: UpdatePostDto): Promise<void> {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .where('post.id = :id', { id });
@@ -62,7 +66,7 @@ export class PostService {
     await this.postRepository.save(updatePostDto);
   }
 
-  async deletePost(id: Uuid): Promise<void> {
+  async deletePost(id: string): Promise<void> {
     const queryBuilder = this.postRepository
       .createQueryBuilder('post')
       .where('post.id = :id', { id });

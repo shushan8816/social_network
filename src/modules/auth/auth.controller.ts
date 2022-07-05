@@ -6,9 +6,9 @@ import { UserNotFoundException } from '../../exceptions/user-not-found.exception
 import { UserDto } from '../user/dto/user.dto';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
-import { LoginPayloadDto } from './dto/loginPayload.dto';
-import { UserLoginDto } from './dto/userLogin.dto';
-import { UserRegisterDto } from './dto/userRegister.dto';
+import { LoginPayloadDto } from './dto/login-payload.dto';
+import { UserLoginDto } from './dto/user-login.dto';
+import { UserRegisterDto } from './dto/user-register.dto';
 
 @Controller('auth')
 @ApiTags('auth')

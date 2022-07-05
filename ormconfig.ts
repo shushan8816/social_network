@@ -1,4 +1,5 @@
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { UserSubscriber } from "./src/subscribers/user.subscriber";
 const configs: TypeOrmModuleOptions & { seeds: string[]; factories: string[] } =
   {
     type: 'postgres',
@@ -12,6 +13,7 @@ const configs: TypeOrmModuleOptions & { seeds: string[]; factories: string[] } =
       'src/modules/**/*.entity{.ts,.js}',
       'src/modules/**/*.view-entity{.ts,.js}',
     ],
+    subscribers: [UserSubscriber],
     migrations: ['src/database/migrations/*{.ts,.js}'],
     seeds: ['src/database/seeds/**/*{.ts,.js}'],
     factories: ['src/database/factories/**/*{.ts,.js}'],

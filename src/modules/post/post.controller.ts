@@ -5,65 +5,72 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Put,
-  Query,
 } from '@nestjs/common';
 import {
   ApiAcceptedResponse,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UserEntity } from '../user/user.entity';
 import { PostDto } from './dto/post.dto';
 import { PostService } from './post.service';
+import { PostEntity } from './entities/post.entity';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { AuthUser } from '../../decorators/auth-ures.decorator';
+import { UserEntity } from '../user/user.entity';
+import { GetPostHandler } from './cmd/get-post.cmd';
+import { CreatePostCommand } from './cmd/create-post.cmd';
 
 @Controller('posts')
 @ApiTags('posts')
 export class PostController {
-  constructor(private postService: PostService) {}
+  constructor(private readonly postService: PostService) {}
 
-  //   @Post()
-  //   @HttpCode(HttpStatus.CREATED)
-  //   @ApiCreatedResponse({ type: PostDto })
-  //   async createPost(@Body() createPostDto: CreatePostDto) {
-  //     const postEntity = await this.postService.createPost(createPostDto);
-  //
-  //     return postEntity.toDto();
-  //   }
-  //
-  //   @Get()
-  //   @ApiPageOkResponse({ type: PostDto })
-  //   async getPosts(
-  //     @Query() postsPageOptionsDto: PostPageOptionsDto,
-  //   ): Promise<PageDto<PostDto>> {
-  //     return this.postService.getAllPost(postsPageOptionsDto);
-  //   }
-  //
-  //   @Get(':id')
-  //   @HttpCode(HttpStatus.OK)
-  //   @ApiOkResponse({ type: PostDto })
-  //   async getSinglePost(@UUIDParam('id') id: Uuid): Promise<PostDto> {
-  //     const entity = await this.postService.getSinglePost(id);
-  //
-  //     return entity.toDto();
-  //   }
-  //
-  //   @Put(':id')
-  //   @HttpCode(HttpStatus.ACCEPTED)
-  //   @ApiAcceptedResponse()
-  //   updatePost(
-  //     @UUIDParam('id') id: Uuid,
-  //     @Body() updatePostDto: UpdatePostDto,
-  //   ): Promise<void> {
-  //     return this.postService.updatePost(id, updatePostDto);
-  //   }
-  //
-  //   @Delete(':id')
-  //   @HttpCode(HttpStatus.ACCEPTED)
-  //   @ApiAcceptedResponse()
-  //   async deletePost(@UUIDParam('id') id: Uuid): Promise<void> {
-  //     await this.postService.deletePost(id);
-  //   }
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({ type: PostDto })
+  async createPost(
+    @Body() createPostDto: CreatePostDto,
+    @AuthUser() user: UserEntity,
+  ) {
+    const postEntity = await this.postService.createPost(
+      user.id,
+      createPostDto,
+    );
+    return postEntity;
+  }
+
+  @Get()
+  @ApiOkResponse({ type: PostDto })
+  async getPosts(): Promise<PostEntity[]> {
+    return this.postService.getAllPost();
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: PostDto })
+  async getSinglePost(@Param('id') id: GetPostHandler): Promise<PostEntity> {
+    return this.postService.getSinglePost(id);
+  }
+
+  @Put(':id')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiAcceptedResponse()
+  updatePost(
+    @Param('id') userId: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ) {
+    return this.postService.updatePost(userId, updatePostDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiAcceptedResponse()
+  async deletePost(@Param('id') userId: string): Promise<void> {
+    await this.postService.deletePost(userId);
+  }
 }

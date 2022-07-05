@@ -6,7 +6,6 @@ import { UserRepository } from './user.repository';
 import { UserEntity } from './user.entity';
 import { UserNotFoundException } from '../../exceptions';
 import { FindConditions } from 'typeorm';
-import { Uuid } from 'aws-sdk/clients/wisdom';
 
 @Injectable()
 export class UserService {
@@ -18,15 +17,10 @@ export class UserService {
     return user;
   }
 
-  async update(updateUserDto: UpdateUserDto, id: Uuid) {
-    if (!isUUID(id))
-      throw new HttpException('User id is incorrect', HttpStatus.BAD_REQUEST);
-
+  async update(updateUserDto: UpdateUserDto, id: string) {
     const userEntity = await this.userRepository
       .createQueryBuilder('user')
-      .where('user.id = :id', {
-        id,
-      })
+      .where('user.id = :id', { id })
       .getOne();
 
     if (!userEntity) throw new UserNotFoundException();
@@ -56,7 +50,7 @@ export class UserService {
 
   async getById(userId: string): Promise<UserEntity> {
     if (!isUUID(userId))
-      throw new HttpException('User id is incorrect', HttpStatus.BAD_REQUEST);
+      throw new HttpException('User_id is incorrect', HttpStatus.BAD_REQUEST);
 
     const userEntity = await this.userRepository
       .createQueryBuilder('user')
@@ -70,7 +64,7 @@ export class UserService {
 
   async delete(userId: string) {
     if (!isUUID(userId))
-      throw new HttpException('User id is incorrect', HttpStatus.BAD_REQUEST);
+      throw new HttpException('User_id is incorrect', HttpStatus.BAD_REQUEST);
 
     const userEntity = await this.userRepository
       .createQueryBuilder('user')
@@ -82,6 +76,5 @@ export class UserService {
 
     await this.userRepository.remove(userEntity);
 
-    return userEntity;
   }
 }
